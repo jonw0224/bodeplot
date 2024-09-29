@@ -4,8 +4,24 @@
 #  
 # bodeplot.py
 #
-# Usage:
-# python3 bodeplot.py
+# Usage: python3 bodeplot.py [-h] [--port PORT] [--fstart FSTART] 
+#                   [--fstop FSTOP][--fstep FSTEP] [--filename FILENAME]
+#
+# Create and save a bodeplot using the FeelTech 3225 function generator and
+# Hantek 6022 oscilloscope
+#
+# options:
+#  -h, --help           show this help message and exit
+#  --port PORT          Serial port for the function generator. Default
+#                       /dev/ttyUSB0.
+#  --fstart FSTART      Starting frequency for the bodeplot in Hz. Default 10
+#                       Hz.
+#  --fstop FSTOP        Stopping frequency for the bodeplot in Hz. Default 5
+#                       MHz.
+#  --fstep FSTEP        Step frequency multiplier. Default 1.1.
+#  --filename FILENAME  Filename to save the bodeplot information. Default
+#                       bodeplot.csv.
+#
 #
 # Utilizes a FeelTech FY3225S function generator and a Hantek 6022 to sweep
 # a filter from 10 Hz to 2.5 MHz and create a bode frequency response plot
@@ -56,8 +72,20 @@ channelGain = 10 # Channel Gain, 10 is the highes gain, used here for more preci
 samplerates = (20, 32, 50, 64, 100, 128, 200, 500, 1000, 2000, 4000, 8000, 10000) # Valid samplerates in kilo samples per second
 blocks = 20 # Number of 1024 samples to capture
 
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser(
+    prog='bodeplot.py',
+    description='Create and save a bodeplot using the FeelTech 3225 function generator and Hantek 6022 oscilloscope' )
+ap.add_argument( "--port", default = "/dev/ttyUSB0", help = "Serial port for the function generator. Default /dev/ttyUSB0." )
+ap.add_argument( "--fstart", type = int, default=10, help = "Starting frequency for the bodeplot in Hz. Default 10 Hz." )
+ap.add_argument( "--fstop", type = int, default = 5e6, help="Stopping frequency for the bodeplot in Hz. Default 5 MHz." )
+ap.add_argument( "--fstep", type = float, default = 1.1, help="Step frequency multiplier. Default 1.1." )
+ap.add_argument( "--filename", default = "bodeplot.csv", help="Filename to save the bodeplot information. Default bodeplot.csv." )
+
+options = ap.parse_args()
+
 # Setup Function Generator
-ft = feeltech.FeelTech("/dev/ttyUSB0")
+ft = feeltech.FeelTech(options.port)
 c = ft.channels()
  
 # Create place to hold data from the Oscilloscope capture
@@ -86,12 +114,12 @@ scope.set_ch2_voltage_range(channelGain) # Highest Gain
 scope.set_ch2_ac_dc(scope.DC) # DC coupling
 
 # Start frequency
-freq = 10
+freq = options.fstart
 
 # Save bodeplot data
 data = []
 
-while(freq < 5e6):
+while(freq < options.fstop):
     # Calculate the sample rate to use for the scope
     samplerate_target = 2*freq
     samplerate = samplerates[0]
@@ -187,13 +215,13 @@ while(freq < 5e6):
     data.append([freq, rms1, rms2, rms1/rms2, deltaphase])    
 
     # Next frequency
-    freq = freq*2
+    freq = freq*options.fstep
 
 # Close the scope
 scope.close_handle()
 
 # Save the bodeplot data as a CSV file
-with open('bode.csv', mode='w', newline='') as file:
+with open(options.filename, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["Frequency", "Channel 1 RMS Magnitude", "Channel 2 RMS Magnitude", "Gain (Ch1/Ch2)", "Phase Difference"])
     writer.writerows(data)
