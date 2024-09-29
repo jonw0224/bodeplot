@@ -7,14 +7,20 @@ Usage:
  Hantek 6022 oscilloscope
 
  options:
+ 
   -h, --help           show this help message and exit
+  
   --port PORT          Serial port for the function generator. Default
                        /dev/ttyUSB0.
+                       
   --fstart FSTART      Starting frequency for the bodeplot in Hz. Default 10
                        Hz.
+                       
   --fstop FSTOP        Stopping frequency for the bodeplot in Hz. Default 5
                        MHz.
+                       
   --fstep FSTEP        Step frequency multiplier. Default 1.1.
+  
   --filename FILENAME  Filename to save the bodeplot information. Default
                        bodeplot.csv.
 
