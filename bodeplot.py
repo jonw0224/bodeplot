@@ -33,10 +33,13 @@
 # https://github.com/atx/python-feeltech
 # https://github.com/Ho-Ro/Hantek6022API
 #
-# Author: Jonathan Weaver
-# Date: 9/23/2024
+# Author: Jonathan Weaver, jonw0224@gmail.com
+# Date: 9/30/2024
 # Version: 
-# 9/23/2024 - 1.0 - Created the file by following the examples for the libaries
+# 9/23/2024 - 1.00 - Created the file by following the examples for the libaries
+# 9/30/2024 - 1.01 - Added arguments and argument parsing so the port, start
+#                    frequency, stop frequency, frequency step, and save
+#                    filename as arguments rather than hardcoded.
 # 
 # Copyright (C) 2024 Jonathan Weaver
 #
