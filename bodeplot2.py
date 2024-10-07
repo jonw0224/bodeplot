@@ -4,24 +4,8 @@
 #  
 # bodeplot.py
 #
-# Usage: python3 bodeplot.py [-h] [--port PORT] [--fstart FSTART] 
-#                   [--fstop FSTOP][--fstep FSTEP] [--filename FILENAME]
-#
-# Create and save a bodeplot using the FeelTech 3225 function generator and
-# Hantek 6022 oscilloscope
-#
-# options:
-#  -h, --help           show this help message and exit
-#  --port PORT          Serial port for the function generator. Default
-#                       /dev/ttyUSB0.
-#  --fstart FSTART      Starting frequency for the bodeplot in Hz. Default 10
-#                       Hz.
-#  --fstop FSTOP        Stopping frequency for the bodeplot in Hz. Default 5
-#                       MHz.
-#  --fstep FSTEP        Step frequency multiplier. Default 1.1.
-#  --filename FILENAME  Filename to save the bodeplot information. Default
-#                       bodeplot.csv.
-#
+# Usage:
+# python3 bodeplot.py
 #
 # Utilizes a FeelTech FY3225S function generator and a Hantek 6022 to sweep
 # a filter from 10 Hz to 2.5 MHz and create a bode frequency response plot
@@ -33,13 +17,10 @@
 # https://github.com/atx/python-feeltech
 # https://github.com/Ho-Ro/Hantek6022API
 #
-# Author: Jonathan Weaver, jonw0224@gmail.com
-# Date: 9/30/2024
+# Author: Jonathan Weaver
+# Date: 9/23/2024
 # Version: 
-# 9/23/2024 - 1.00 - Created the file by following the examples for the libaries
-# 9/30/2024 - 1.01 - Added arguments and argument parsing so the port, start
-#                    frequency, stop frequency, frequency step, and save
-#                    filename as arguments rather than hardcoded.
+# 9/23/2024 - 1.0 - Created the file by following the examples for the libaries
 # 
 # Copyright (C) 2024 Jonathan Weaver
 #
@@ -71,11 +52,10 @@ import math
 import csv
 
 # Declare Global Constants
-channelHighGain = 10 # Channel Gain, 10 is the highest gain, used here for more precise measurements
+channelGain = 10 # Channel Gain, 10 is the highest gain, used here for more precise measurements
 channelLowGain = 1 # Channel Gain, 1 is the lowest gain, used here for when we need to use a higher magnitude input
-lowerAmplitude = 0.1 # Usa a 0.1 V peak to peak sine wave with the function generator when the filter gain is more than 10
-lowAmplitude = 1 # Use a 1 V peak to peak sine wave with the function generator when the filter gain is more than 1/200
-highAmplitude = 10 #Use a 10 V peak to peak sine wave with the function generator when the filter gain is less than 1/200
+lowAmplitude = 1 # Use a 1 V peak to peak sine wave with the function generator when the filter gain is more than 200
+highAmplitude = 10 #Use a 10 V peak to peak sine wave with the function generator when the filter gain is less than 200
 samplerates = (20, 32, 50, 64, 100, 128, 200, 500, 1000, 2000, 4000, 8000, 10000) # Valid samplerates in kilo samples per second
 blocks = 20 # Number of 1024 samples to capture
 
@@ -114,10 +94,10 @@ if (not scope.is_device_firmware_present):
 # Scope configuration
 scope.set_num_channels(2) # Two channels
 # Setup channel 1
-scope.set_ch1_voltage_range(channelHighGain) # Highest Gain
+scope.set_ch1_voltage_range(channelGain) # Highest Gain
 scope.set_ch1_ac_dc(scope.DC) # DC coupling
 # Setup channel 2
-scope.set_ch2_voltage_range(channelHighGain) # Highest Gain
+scope.set_ch2_voltage_range(channelGain) # Highest Gain
 scope.set_ch2_ac_dc(scope.DC) # DC coupling
 
 # Start frequency
@@ -126,9 +106,7 @@ freq = options.fstart
 # Save bodeplot data
 data = []
 
-# Default Gain mode
-gainMode = 1
-
+highGain = 0
 while(freq < options.fstop):
     # Calculate the sample rate to use for the scope
     samplerate_target = 2*freq
@@ -144,23 +122,12 @@ while(freq < options.fstop):
     scope.set_sample_rate(sample_id)
 
     # Set the function generator waveform
-    if gainMode == 0:
-        scope.set_ch1_voltage_range(channelHighGain) # Highest Gain
-        scope.set_ch2_voltage_range(channelLowGain) # Lowest Gain
-        c[0].frequency(freq).waveform(feeltech.SINE).offset(0).amplitude(highAmplitude) # 10 Vpp
-    elif gainMode == 1:
-        scope.set_ch1_voltage_range(channelHighGain) # Highest Gain
-        scope.set_ch2_voltage_range(channelHighGain) # Highest Gain
-        c[0].frequency(freq).waveform(feeltech.SINE).offset(0).amplitude(lowAmplitude) # 1 Vpp
-    elif gainMode == 2:
-        scope.set_ch1_voltage_range(channelLowGain) # Lowest Gain
-        scope.set_ch2_voltage_range(channelHighGain) # Highest Gain
-        c[0].frequency(freq).waveform(feeltech.SINE).offset(0).amplitude(lowAmplitude) # 1 Vpp
+    if highGain == 0:
+        scope.set_ch2_voltage_range(channelGain) # Highest Gain
+        c[0].frequency(freq).waveform(feeltech.SINE).offset(0).amplitude(lowAmplitude)
     else:
-        scope.set_ch1_voltage_range(channelLowGain) # Lowest Gain
-        scope.set_ch2_voltage_range(channelHighGain) # Highest Gain
-        c[0].frequency(freq).waveform(feeltech.SINE).offset(0).amplitude(lowerAmplitude) # 0.1 Vpp
-
+        scope.set_ch2_voltage_range(channelLowGain) # Lowest Gain
+        c[0].frequency(freq).waveform(feeltech.SINE).offset(0).amplitude(highAmplitude)
 
     # Read and apply scope calibration values
     calibration = scope.get_calibration_values()
@@ -170,15 +137,11 @@ while(freq < options.fstop):
 
     # Capture the waveforms on channel 1 and channel 2
     ch1_data, ch2_data = scope.read_data(data_points)#,raw=True)#timeout=1)
-    if gainMode == 0:
-        voltage_data1 = scope.scale_read_data(ch1_data[skip:], channelHighGain, channel=1 )
+    voltage_data1 = scope.scale_read_data(ch1_data[skip:], channelGain, channel=1 )
+    if highGain == 0:
+        voltage_data2 = scope.scale_read_data(ch2_data[skip:], channelGain, channel=2 )
+    else:
         voltage_data2 = scope.scale_read_data(ch2_data[skip:], channelLowGain, channel=2 )
-    elif gainMode == 1:
-        voltage_data1 = scope.scale_read_data(ch1_data[skip:], channelHighGain, channel=1 )
-        voltage_data2 = scope.scale_read_data(ch2_data[skip:], channelHighGain, channel=2 )
-    else
-        voltage_data1 = scope.scale_read_data(ch1_data[skip:], channelLowGain, channel=1 )    
-        voltage_data2 = scope.scale_read_data(ch2_data[skip:], channelHighGain, channel=2 )
 
     timing_data, rate_label = scope.convert_sampling_rate_to_measurement_times(data_points-skip, sample_id)
 
@@ -203,19 +166,11 @@ while(freq < options.fstop):
     rms2 = math.sqrt(rms2/n2) - dc2/n2
 
     # If the gain is small, do it over again at a higher resolution
-    if gainMode == 0 and rms1 > 0.2:
-        gainMode = 1
+    if rms1 < 0.015 and highGain == 0:
+        highGain = 1
     # If the gain is high, but set for small, do it over gain at a lower resolution
-    elif gainMode == 1 and rms1 < 0.015:
-        gainMode = 0
-    elif gainMode == 1 and rms1 > 0.4:
-        gainMode = 2
-    elif gainMode == 2 and rms1 < 0.15:
-        gainMode = 1
-    elif gainMode == 2 and rms1 > 4:
-        gainMode = 3
-    elif gainMode == 3 and rms1 < 0.15:
-        gainMode = 2
+    elif rms1 > 0.200 and highGain == 1:
+        highGain = 0
     else:
         # Compute the FFT for Channel 1
         fft_values = np.fft.fft(voltage_data1)
