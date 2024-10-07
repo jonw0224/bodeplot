@@ -206,10 +206,10 @@ while(freq < options.fstop):
         n2 = n2 + 1
     rms2 = math.sqrt(rms2/n2) - dc2/n2
 
-    # If the gain is small, do it over again at a higher resolution
+    # Look at the RMS value of channel 1 to determine if the gainMode is correct.
+    # If not, change the gainMode and try again
     if gainMode == 0 and rms1 > 0.2:
         gainMode = 1
-    # If the gain is high, but set for small, do it over gain at a lower resolution
     elif gainMode == 1 and rms1 < 0.015:
         gainMode = 0
     elif gainMode == 1 and rms1 > 0.4:
@@ -220,6 +220,7 @@ while(freq < options.fstop):
         gainMode = 3
     elif gainMode == 3 and rms1 < 0.15:
         gainMode = 2
+    # The gainMode was fine, continue processing the data and save it, then move on to the next frequency
     else:
         # Compute the FFT for Channel 1
         fft_values = np.fft.fft(voltage_data1)
