@@ -180,7 +180,7 @@ while(freq < options.fstop):
     elif gainMode == 1:
         voltage_data1 = scope.scale_read_data(ch1_data[skip:], channelHighGain, channel=1 )
         voltage_data2 = scope.scale_read_data(ch2_data[skip:], channelHighGain, channel=2 )
-    else
+    else:
         voltage_data1 = scope.scale_read_data(ch1_data[skip:], channelLowGain, channel=1 )    
         voltage_data2 = scope.scale_read_data(ch2_data[skip:], channelHighGain, channel=2 )
 
