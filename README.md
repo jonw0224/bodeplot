@@ -29,7 +29,7 @@ Usage:
 
 Utilizes a FeelTech FY3225S function generator and a Hantek 6022 oscillosope to sweep a filter from *FSTART* (10 Hz) to *FSTOP* (5 MHz) by *FSTEP* (1.1) and create a bode frequency response plot, display the plot, and save the plot information to *FILENAME* ('bodeplot.csv'). Channel 1 on the oscilloscope is the filter output and Channel 2 on the oscilloscope is the filter input (i.e. the function generator Channel 1 output).
 
-Depends on having python-feeltech and Hantek6022API installed.
+Depends on having the python-feeltech and Hantek6022API installed.
 
 https://github.com/atx/python-feeltech
 

@@ -34,12 +34,16 @@
 # https://github.com/Ho-Ro/Hantek6022API
 #
 # Author: Jonathan Weaver, jonw0224@gmail.com
-# Date: 9/30/2024
+# Date: 10/6/2024
 # Version: 
 # 9/23/2024 - 1.00 - Created the file by following the examples for the libaries
 # 9/30/2024 - 1.01 - Added arguments and argument parsing so the port, start
 #                    frequency, stop frequency, frequency step, and save
 #                    filename as arguments rather than hardcoded.
+# 10/6/2024 - 1.02 - Added gain control to expand the gain range for the 
+#                    bodeplot. Will use 10 Vpp down to 0.1 Vpp on the function
+#                    generator and modify the scope channel gains to maximize
+#                    the range of the bodeplot.
 # 
 # Copyright (C) 2024 Jonathan Weaver
 #
